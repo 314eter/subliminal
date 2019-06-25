@@ -90,7 +90,7 @@ class Provider(object):
     subtitle_class = None
 
     #: User Agent to use
-    user_agent = 'Subliminal/%s' % __short_version__
+    user_agent = 'Mozilla/5.0 (X11; Linux x86_64; rv:67.0) Gecko/20100101 Firefox/67.0'
 
     def __enter__(self):
         self.initialize()

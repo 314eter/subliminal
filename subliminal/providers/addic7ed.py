@@ -1,10 +1,12 @@
 # -*- coding: utf-8 -*-
 import logging
 import re
+import time
 
 from babelfish import Language, language_converters
 from guessit import guessit
 from requests import Session
+from requests.utils import cookiejar_from_dict
 
 from . import ParserBeautifulSoup, Provider
 from ..cache import SHOW_EXPIRATION_TIME, region
@@ -84,17 +86,19 @@ class Addic7edProvider(Provider):
     server_url = 'http://www.addic7ed.com/'
     subtitle_class = Addic7edSubtitle
 
-    def __init__(self, username=None, password=None):
+    def __init__(self, username=None, password=None, phpsessid=None):
         if any((username, password)) and not all((username, password)):
             raise ConfigurationError('Username and password must be specified')
 
         self.username = username
         self.password = password
+        self.phpsessid = phpsessid
         self.logged_in = False
         self.session = None
 
     def initialize(self):
-        self.session = Session()
+        self.session = Addic7edSession()
+        self.session.cookies = cookiejar_from_dict({'PHPSESSID': self.phpsessid})
         self.session.headers['User-Agent'] = self.user_agent
 
         # login
@@ -311,3 +315,12 @@ class Addic7edProvider(Provider):
             raise DownloadLimitExceeded
 
         subtitle.content = fix_line_ending(r.content)
+
+class Addic7edSession(Session):
+    last_request = 0
+
+    def request(self, *args, **kwargs):
+        if time.time() < self.last_request + 5:
+            time.sleep(5)
+        self.last_request = time.time()
+        return super().request(*args, **kwargs)
