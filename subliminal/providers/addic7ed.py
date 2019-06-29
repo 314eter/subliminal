@@ -20,9 +20,6 @@ logger = logging.getLogger(__name__)
 
 language_converters.register('addic7ed = subliminal.converters.addic7ed:Addic7edConverter')
 
-# Series cell matching regex
-show_cells_re = re.compile(b'<td class="version">.*?</td>', re.DOTALL)
-
 #: Series header parsing regex
 series_year_re = re.compile(r'^(?P<series>[ \w\'.:(),*&!?-]+?)(?: \((?P<year>\d{4})\))?$')
 
@@ -137,19 +134,11 @@ class Addic7edProvider(Provider):
         r = self.session.get(self.server_url + 'shows.php', timeout=10)
         r.raise_for_status()
 
-        # LXML parser seems to fail when parsing Addic7ed.com HTML markup.
-        # Last known version to work properly is 3.6.4 (next version, 3.7.0, fails)
-        # Assuming the site's markup is bad, and stripping it down to only contain what's needed.
-        show_cells = re.findall(show_cells_re, r.content)
-        if show_cells:
-            soup = ParserBeautifulSoup(b''.join(show_cells), ['lxml', 'html.parser'])
-        else:
-            # If RegEx fails, fall back to original r.content and use 'html.parser'
-            soup = ParserBeautifulSoup(r.content, ['html.parser'])
+        soup = ParserBeautifulSoup(r.content, ['html.parser'])
 
         # populate the show ids
         show_ids = {}
-        for show in soup.select('td.version > h3 > a[href^="/show/"]'):
+        for show in soup.select('td.vr > h3 > a[href^="/show/"]'):
             show_ids[sanitize(show.text)] = int(show['href'][6:])
         logger.debug('Found %d show ids', len(show_ids))
 
