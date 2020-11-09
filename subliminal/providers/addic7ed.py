@@ -138,7 +138,7 @@ class Addic7edProvider(Provider):
 
         # populate the show ids
         show_ids = {}
-        for show in soup.select('td.vr > h3 > a[href^="/show/"]'):
+        for show in soup.select('td.version > h3 > a[href^="/show/"]'):
             show_ids[sanitize(show.text)] = int(show['href'][6:])
         logger.debug('Found %d show ids', len(show_ids))
 
